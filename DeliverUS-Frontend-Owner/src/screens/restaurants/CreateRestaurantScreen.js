@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useContext } from 'react'
 import { Image, Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native'
 import * as ExpoImagePicker from 'expo-image-picker'
 import { MaterialCommunityIcons } from '@expo/vector-icons'
@@ -13,12 +13,13 @@ import restaurantBackground from '../../../assets/restaurantBackground.jpeg'
 import { showMessage } from 'react-native-flash-message'
 import { ErrorMessage, Formik } from 'formik'
 import TextError from '../../components/TextError'
+import { AuthorizationContext } from '../../context/AuthorizationContext'
 
-export default function CreateRestaurantScreen ({ navigation }) {
+export default function CreateRestaurantScreen ({ navigation, route }) {
   const [open, setOpen] = useState(false)
   const [restaurantCategories, setRestaurantCategories] = useState([])
   const [backendErrors, setBackendErrors] = useState()
-
+  const { loggedInUser } = useContext(AuthorizationContext)
   const initialRestaurantValues = { name: null, description: null, address: null, postalCode: null, url: null, shippingCosts: null, email: null, phone: null, restaurantCategoryId: null }
   const validationSchema = yup.object().shape({
     name: yup
@@ -77,7 +78,7 @@ export default function CreateRestaurantScreen ({ navigation }) {
       }
     }
     fetchRestaurantCategories()
-  }, [])
+  }, [route])
 
   useEffect(() => {
     (async () => {
@@ -120,6 +121,7 @@ export default function CreateRestaurantScreen ({ navigation }) {
       setBackendErrors(error.errors)
     }
   }
+
   return (
     <Formik
       validationSchema={validationSchema}
@@ -177,6 +179,29 @@ export default function CreateRestaurantScreen ({ navigation }) {
                 dropDownStyle={{ backgroundColor: '#fafafa' }}
               />
               <ErrorMessage name={'restaurantCategoryId'} render={msg => <TextError>{msg}</TextError> }/>
+
+              <>
+                {loggedInUser &&
+                <Pressable
+                  onPress={() => navigation.navigate('CreateRestaurantCategoryScreen')
+                  }
+                  style={({ pressed }) => [
+                    {
+                      backgroundColor: pressed
+                        ? GlobalStyles.brandGreenTap
+                        : GlobalStyles.brandGreen
+                    },
+                    styles.button
+                  ]}>
+                  <View style={[{ flex: 1, flexDirection: 'row', justifyContent: 'center' }]}>
+                    <MaterialCommunityIcons name='plus-circle' color={'white'} size={20}/>
+                    <TextRegular textStyle={styles.text}>
+                      Create restaurant category
+                    </TextRegular>
+                  </View>
+                </Pressable>
+                }
+              </>
 
               <Pressable onPress={() =>
                 pickImage(
